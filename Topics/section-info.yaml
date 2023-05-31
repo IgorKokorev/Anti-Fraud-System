@@ -10,3 +10,10 @@ content:
 - LocalTime
 - LocalDateTime
 - Regexes in programs
+- Patterns and Matcher
+- Match results
+- Retrieving Class instances
+- Dealing with modifiers
+- Manipulating fields and methods
+- Class Loader
+- Decorator
