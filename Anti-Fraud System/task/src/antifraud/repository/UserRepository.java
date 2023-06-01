@@ -12,4 +12,7 @@ import java.util.Optional;
 public interface UserRepository extends CrudRepository<UserDB, Long> {
     Optional<UserDB> findById(Long id);
     List<UserDB> findByUsernameIgnoreCase(String username);
+    List<UserDB> findAllByOrderById();
+//    List<UserDB> findAll();
+
 }

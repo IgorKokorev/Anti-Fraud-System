@@ -2,6 +2,7 @@ package antifraud.authentication;
 
 import antifraud.repository.UserDB;
 import antifraud.repository.UserRepository;
+import io.micrometer.core.instrument.util.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -23,9 +24,9 @@ public class RegistrationController {
 
         // Checking data correctness
         if (user == null) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Empty user data");
-        if (user.getName().isBlank()) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Empty user name");
-        if (user.getUsername().isBlank()) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Empty user username");
-        if (user.getPassword().isBlank()) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Empty user password");
+        if (StringUtils.isBlank(user.getName())) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Empty user name");
+        if (StringUtils.isBlank(user.getUsername())) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Empty user username");
+        if (StringUtils.isBlank(user.getPassword())) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Empty user password");
 
         // Checking if the username is occupied
         if (userRepo.findByUsernameIgnoreCase(user.getUsername()).size() > 0)
@@ -35,7 +36,7 @@ public class RegistrationController {
         user.setPassword(encoder.encode(user.getPassword()));
 
         // Saving user to DB
-        UserDB userDB = new UserDB(user.getName(), user.getUsername(), user.getPassword(), "ROLE_USER");
+        UserDB userDB = new UserDB(user.getName().trim(), user.getUsername().trim(), user.getPassword(), "ROLE_USER");
         userDB = userRepo.save(userDB);
 
         // returning user data

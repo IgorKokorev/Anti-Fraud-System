@@ -17,10 +17,11 @@ public class UserDetailsServiceImpl implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        List<UserDB> userDBList = userRepo.findByUsernameIgnoreCase(username);
+        String cutTheCrap = username.trim();
+        List<UserDB> userDBList = userRepo.findByUsernameIgnoreCase(cutTheCrap);
 
         if (userDBList.size() != 1) {
-            throw new UsernameNotFoundException("Not found: " + username);
+            throw new UsernameNotFoundException("Not found: " + cutTheCrap);
         }
 
         return new UserDetailsImpl(userDBList.get(0));

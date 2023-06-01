@@ -1,6 +1,6 @@
 <h2>Manipulating fields and methods</h2>
 <div class="step-text">
-<html><body><p>For now, you must already have a basic understanding of the reflection. However, what we did in the previous topics was just a small part of what is possible. In this topic, we will learn how to get fields and their values, write data into fields and call methods by using reflection.</p>
+<p>For now, you must already have a basic understanding of the reflection. However, what we did in the previous topics was just a small part of what is possible. In this topic, we will learn how to get fields and their values, write data into fields and call methods by using reflection.</p>
 <h5 id="getting-fields-values">Getting fields values</h5>
 <p>We will start by explaining how to get the values of particular fields. Let's revise such a class:</p>
 <pre><code class="language-java">class Item {
@@ -86,5 +86,5 @@ for (Method method : methods) {
 <p> </p>
 <h5 id="when-it-works">When it works</h5>
 <p>We have covered a way of accessing information about methods and fields at runtime via reflection. After reading that you may have a question: why do you need to get methods and fields of a class while executing the program if you know all of them at the moment of compiling a program?</p>
-<p>One of the typical problems that can be solved by using reflection is the <strong>serialization</strong> of objects. If some class does not implement the <code class="language-java">Serializable</code> interface, it cannot be serialized without using reflection. With reflection, however, all the class fields, even private ones, become visible, so you can write them into an external file. When deserializing, you can read this file and restore all the fields, including private, in it. <strong>Never change the values of private fields in all cases except for deserialization</strong>, because this way there is a high probability to crash the program. To deserialize an object, you must first create an instance of it. You will learn how to do this in the following topics.</p></body></html>
+<p>One of the typical problems that can be solved by using reflection is the <strong>serialization</strong> of objects. If some class does not implement the <code class="language-java">Serializable</code> interface, it cannot be serialized without using reflection. With reflection, however, all the class fields, even private ones, become visible, so you can write them into an external file. When deserializing, you can read this file and restore all the fields, including private, in it. <strong>Never change the values of private fields in all cases except for deserialization</strong>, because this way there is a high probability to crash the program. To deserialize an object, you must first create an instance of it. You will learn how to do this in the following topics.</p>
 </div>
