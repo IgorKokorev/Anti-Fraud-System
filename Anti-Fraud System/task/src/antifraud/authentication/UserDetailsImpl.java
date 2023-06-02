@@ -1,6 +1,6 @@
 package antifraud.authentication;
 
-import antifraud.repository.UserDB;
+import antifraud.DBtables.UserDB;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -11,12 +11,14 @@ import java.util.List;
 public class UserDetailsImpl implements UserDetails {
     private final String username;
     private final String password;
+    private boolean isAccountNonLocked;
     private final List<GrantedAuthority> rolesAndAuthorities;
 
     public UserDetailsImpl(UserDB user) {
         username = user.getUsername();
         password = user.getPassword();
-        rolesAndAuthorities = List.of(new SimpleGrantedAuthority(user.getRole()));
+        isAccountNonLocked = user.isAccountNonLocked();
+        rolesAndAuthorities = List.of(new SimpleGrantedAuthority("ROLE_" + user.getRole()));
     }
 
     @Override
@@ -42,7 +44,7 @@ public class UserDetailsImpl implements UserDetails {
 
     @Override
     public boolean isAccountNonLocked() {
-        return true;
+        return isAccountNonLocked;
     }
 
     @Override

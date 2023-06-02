@@ -1,6 +1,6 @@
 package antifraud.authentication;
 
-import antifraud.repository.UserDB;
+import antifraud.DBtables.UserDB;
 import antifraud.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;

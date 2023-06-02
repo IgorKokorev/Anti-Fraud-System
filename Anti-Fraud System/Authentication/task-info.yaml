@@ -600,9 +600,12 @@ files:
 - name: src/antifraud/requests/UsernameStatus.java
   visible: true
   learner_created: true
+- name: src/antifraud/repository/RolesDB.java
+  visible: true
+  learner_created: true
 feedback_link: https://hyperskill.org/learn/step/18068#comment
 status: Solved
 feedback:
   message: Congratulations!
   time: "Thu, 01 Jun 2023 14:55:46 UTC"
-record: -1
+record: 3
