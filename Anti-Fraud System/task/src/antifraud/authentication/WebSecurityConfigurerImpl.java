@@ -48,6 +48,8 @@ public class WebSecurityConfigurerImpl extends WebSecurityConfigurerAdapter {
                 .antMatchers(HttpMethod.DELETE, "/api/auth/user/**").hasRole("ADMINISTRATOR")
                 .antMatchers(HttpMethod.GET, "/api/auth/list/**").hasAnyRole("ADMINISTRATOR", "SUPPORT")
                 .antMatchers(HttpMethod.POST, "/api/antifraud/transaction/**").hasRole("MERCHANT")
+                .antMatchers("/api/antifraud/suspicious-ip/**").hasRole("SUPPORT")
+                .antMatchers("/api/antifraud/stolencard/**").hasRole("SUPPORT")
                 .antMatchers(HttpMethod.PUT, "/api/auth/access/**").hasRole("ADMINISTRATOR")
                 .antMatchers(HttpMethod.PUT, "/api/auth/role/**").hasRole("ADMINISTRATOR")
 //                .antMatchers("/api/auth/user/**").authenticated()
