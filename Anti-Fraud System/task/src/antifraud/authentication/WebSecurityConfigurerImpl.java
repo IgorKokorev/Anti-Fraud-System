@@ -34,10 +34,6 @@ public class WebSecurityConfigurerImpl extends WebSecurityConfigurerAdapter {
         daoAuthenticationProvider.setPasswordEncoder(getEncoder());
         auth.authenticationProvider(daoAuthenticationProvider);
 */
-        /*auth
-                .inMemoryAuthentication() // user store 2
-                .withUser("Admin").password("hardcoded").roles("USER")
-                .and().passwordEncoder(NoOpPasswordEncoder.getInstance());*/
     }
 
     @Override
@@ -48,12 +44,14 @@ public class WebSecurityConfigurerImpl extends WebSecurityConfigurerAdapter {
                 .csrf().disable().headers().frameOptions().disable() // for Postman, the H2 console
                 .and()
                 .authorizeRequests() // manage access
-                .antMatchers("/api/antifraud/transaction").authenticated()
-                .antMatchers("/api/auth/list").authenticated()
                 .antMatchers(HttpMethod.POST, "/api/auth/user").permitAll()
-                .antMatchers("/api/auth/user/**").authenticated()
+                .antMatchers(HttpMethod.DELETE, "/api/auth/user/**").hasRole("ADMINISTRATOR")
+                .antMatchers(HttpMethod.GET, "/api/auth/list/**").hasAnyRole("ADMINISTRATOR", "SUPPORT")
+                .antMatchers(HttpMethod.POST, "/api/antifraud/transaction/**").hasRole("MERCHANT")
+                .antMatchers(HttpMethod.PUT, "/api/auth/access/**").hasRole("ADMINISTRATOR")
+                .antMatchers(HttpMethod.PUT, "/api/auth/role/**").hasRole("ADMINISTRATOR")
+//                .antMatchers("/api/auth/user/**").authenticated()
                 .antMatchers("/actuator/shutdown").permitAll() // needs to run test
-                // other matchers
                 .and()
                 .sessionManagement()
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS); // no session
