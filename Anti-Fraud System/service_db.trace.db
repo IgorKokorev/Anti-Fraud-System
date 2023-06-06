@@ -1363,3 +1363,6 @@ select userdb0_.id as id1_0_, userdb0_.name as name2_0_, userdb0_.password as pa
 2023-06-01 16:10:50 jdbc[3]: exception
 org.h2.jdbc.JdbcSQLSyntaxErrorException: Table "USERS" not found (this database is empty); SQL statement:
 select userdb0_.id as id1_0_, userdb0_.name as name2_0_, userdb0_.password as password3_0_, userdb0_.role as role4_0_, userdb0_.username as username5_0_ from users userdb0_ where upper(userdb0_.username)=upper(?) [42104-212]
+2023-06-06 15:19:13 jdbc[3]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Syntax error in SQL statement "SELECT COUNT [*]DISTINCT ip FROM transactions WHERE number = ? AND date > ? AND date < ?"; SQL statement:
+SELECT COUNT DISTINCT ip FROM transactions WHERE number = ? AND date > ? AND date < ? [42000-212]

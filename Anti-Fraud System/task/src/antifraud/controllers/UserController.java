@@ -1,7 +1,9 @@
 package antifraud.controllers;
 
 import antifraud.DBtables.UserDB;
-import antifraud.DTO.*;
+import antifraud.DTORequests.*;
+import antifraud.DTOResponses.Status;
+import antifraud.DTOResponses.UserToReturn;
 import antifraud.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;

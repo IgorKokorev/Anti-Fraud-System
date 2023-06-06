@@ -1,7 +1,7 @@
 package antifraud.controllers;
 
-import antifraud.DTO.UserToAdd;
-import antifraud.DTO.UserToReturn;
+import antifraud.DTORequests.UserToAdd;
+import antifraud.DTOResponses.UserToReturn;
 import antifraud.DBtables.UserDB;
 import antifraud.repository.UserRepository;
 import io.micrometer.core.instrument.util.StringUtils;

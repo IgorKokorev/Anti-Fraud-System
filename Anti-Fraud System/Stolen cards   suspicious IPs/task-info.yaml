@@ -1204,106 +1204,6 @@ files:
         }
     }
   learner_created: true
-- name: src/antifraud/DTO/UsernameRole.java
-  visible: true
-  text: |
-    package antifraud.DTO;
-
-    import lombok.Data;
-
-    @Data
-    public class UsernameRole {
-        private String username;
-        private String role;
-    }
-  learner_created: true
-- name: src/antifraud/DTO/UserToAdd.java
-  visible: true
-  text: |-
-    package antifraud.DTO;
-
-    public class UserToAdd {
-        private String name;
-        private String username;
-        private String password;
-
-        public UserToAdd() {
-        }
-
-        public String getName() {
-            return name;
-        }
-
-        public String getUsername() {
-            return username;
-        }
-
-        public String getPassword() {
-            return password;
-        }
-
-        public void setName(String name) {
-            this.name = name;
-        }
-
-        public void setUsername(String username) {
-            this.username = username;
-        }
-
-        public void setPassword(String password) {
-            this.password = password;
-        }
-
-    }
-  learner_created: true
-- name: src/antifraud/DTO/Status.java
-  visible: true
-  text: |
-    package antifraud.DTO;
-
-    import lombok.AllArgsConstructor;
-    import lombok.Data;
-
-    @Data
-    @AllArgsConstructor
-    public class Status {
-        private String status;
-    }
-  learner_created: true
-- name: src/antifraud/DTO/UsernameStatus.java
-  visible: true
-  text: |
-    package antifraud.DTO;
-
-    public class UsernameStatus {
-        private String username;
-        private String status;
-
-        public UsernameStatus(String username, String status) {
-            this.username = username;
-            this.status = status;
-        }
-
-        public UsernameStatus() {
-        }
-
-        public String getUsername() {
-            return username;
-        }
-
-        public String getStatus() {
-            return status;
-        }
-
-        public void setUsername(String username) {
-            this.username = username;
-        }
-
-        public void setStatus(String status) {
-            this.status = status;
-        }
-    }
-  learner_created: true
 - name: src/antifraud/DBtables/RolesDB.java
   visible: true
   text: |
@@ -1513,68 +1413,6 @@ files:
         }
     }
   learner_created: true
-- name: src/antifraud/DTO/UsernameOperation.java
-  visible: true
-  text: |
-    package antifraud.DTO;
-
-    import lombok.Data;
-
-    @Data
-    public class UsernameOperation {
-        private String username;
-        private String operation;
-    }
-  learner_created: true
-- name: src/antifraud/DTO/UserToReturn.java
-  visible: true
-  text: |
-    package antifraud.DTO;
-
-    import antifraud.DBtables.UserDB;
-    import lombok.Data;
-
-    @Data
-    public class UserToReturn {
-        private Long id;
-        private String name;
-        private String username;
-        private String role;
-
-        public UserToReturn(UserDB userDB) {
-            this.id = userDB.getId();
-            this.name = userDB.getName();
-            this.username = userDB.getUsername();
-            this.role = userDB.getRole();
-        }
-    }
-  learner_created: true
-- name: src/antifraud/DTO/TransactionResult.java
-  visible: true
-  text: |
-    package antifraud.DTO;
-
-    public class TransactionResult {
-        public enum Result {ALLOWED, MANUAL_PROCESSING, PROHIBITED};
-
-        private Result result;
-
-        public TransactionResult(Result result) {
-            this.result = result;
-        }
-
-        public TransactionResult() {
-        }
-
-        public Result getResult() {
-            return result;
-        }
-
-        public void setResult(Result result) {
-            this.result = result;
-        }
-    }
-  learner_created: true
 - name: src/antifraud/authentication/UserDetailsServiceImpl.java
   visible: true
   text: |-
@@ -1667,7 +1505,112 @@ files:
         }
     }
   learner_created: true
-- name: src/antifraud/DTO/Transaction.java
+- name: src/antifraud/DBtables/StolencardDB.java
+  visible: true
+  learner_created: true
+- name: src/antifraud/DBtables/SuspiciousIpDB.java
+  visible: true
+  learner_created: true
+- name: src/antifraud/DTORequests/UsernameRole.java
+  visible: true
+  text: |
+    package antifraud.DTO;
+
+    import lombok.Data;
+
+    @Data
+    public class UsernameRole {
+        private String username;
+        private String role;
+    }
+  learner_created: true
+- name: src/antifraud/DTORequests/UserToAdd.java
+  visible: true
+  text: |-
+    package antifraud.DTO;
+
+    public class UserToAdd {
+        private String name;
+        private String username;
+        private String password;
+
+        public UserToAdd() {
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public String getUsername() {
+            return username;
+        }
+
+        public String getPassword() {
+            return password;
+        }
+
+        public void setName(String name) {
+            this.name = name;
+        }
+
+        public void setUsername(String username) {
+            this.username = username;
+        }
+
+        public void setPassword(String password) {
+            this.password = password;
+        }
+
+    }
+  learner_created: true
+- name: src/antifraud/DTORequests/UsernameStatus.java
+  visible: true
+  text: |
+    package antifraud.DTO;
+
+    public class UsernameStatus {
+        private String username;
+        private String status;
+
+        public UsernameStatus(String username, String status) {
+            this.username = username;
+            this.status = status;
+        }
+
+        public UsernameStatus() {
+        }
+
+        public String getUsername() {
+            return username;
+        }
+
+        public String getStatus() {
+            return status;
+        }
+
+        public void setUsername(String username) {
+            this.username = username;
+        }
+
+        public void setStatus(String status) {
+            this.status = status;
+        }
+    }
+  learner_created: true
+- name: src/antifraud/DTORequests/UsernameOperation.java
+  visible: true
+  text: |
+    package antifraud.DTO;
+
+    import lombok.Data;
+
+    @Data
+    public class UsernameOperation {
+        private String username;
+        private String operation;
+    }
+  learner_created: true
+- name: src/antifraud/DTORequests/Transaction.java
   visible: true
   text: |
     package antifraud.DTO;
@@ -1691,18 +1634,96 @@ files:
         }
     }
   learner_created: true
-- name: src/antifraud/DTO/SuspiciousIpToAdd.java
+- name: src/antifraud/DTORequests/SuspiciousIpToAdd.java
   visible: true
   learner_created: true
-- name: src/antifraud/DTO/StolencardToAdd.java
+- name: src/antifraud/DTORequests/StolencardToAdd.java
   visible: true
   learner_created: true
-- name: src/antifraud/DBtables/StolencardDB.java
+- name: src/antifraud/DTOResponses/TransactionResult.java
+  visible: true
+  text: |
+    package antifraud.DTO;
+
+    public class TransactionResult {
+        public enum Result {ALLOWED, MANUAL_PROCESSING, PROHIBITED};
+
+        private Result result;
+
+        public TransactionResult(Result result) {
+            this.result = result;
+        }
+
+        public TransactionResult() {
+        }
+
+        public Result getResult() {
+            return result;
+        }
+
+        public void setResult(Result result) {
+            this.result = result;
+        }
+    }
+  learner_created: true
+- name: src/antifraud/DTOResponses/Status.java
+  visible: true
+  text: |
+    package antifraud.DTO;
+
+    import lombok.AllArgsConstructor;
+    import lombok.Data;
+
+    @Data
+    @AllArgsConstructor
+    public class Status {
+        private String status;
+    }
+  learner_created: true
+- name: src/antifraud/DTOResponses/UserToReturn.java
+  visible: true
+  text: |
+    package antifraud.DTO;
+
+    import antifraud.DBtables.UserDB;
+    import lombok.Data;
+
+    @Data
+    public class UserToReturn {
+        private Long id;
+        private String name;
+        private String username;
+        private String role;
+
+        public UserToReturn(UserDB userDB) {
+            this.id = userDB.getId();
+            this.name = userDB.getName();
+            this.username = userDB.getUsername();
+            this.role = userDB.getRole();
+        }
+    }
+  learner_created: true
+- name: src/antifraud/DTOResponses/IPresponse.java
   visible: true
   learner_created: true
-- name: src/antifraud/DBtables/SuspiciousIpDB.java
+- name: src/antifraud/repository/SuspiciousIpDBRepository.java
+  visible: true
+  learner_created: true
+- name: src/antifraud/controllers/IPController.java
+  visible: true
+  learner_created: true
+- name: src/antifraud/controllers/StolenCardsController.java
+  visible: true
+  learner_created: true
+- name: src/antifraud/repository/StolencardDBRepository.java
+  visible: true
+  learner_created: true
+- name: src/antifraud/controllers/CheckData.java
   visible: true
   learner_created: true
 feedback_link: https://hyperskill.org/learn/step/18070#comment
-status: Unchecked
-record: -1
+status: Solved
+feedback:
+  message: Congratulations!
+  time: "Mon, 05 Jun 2023 09:37:05 UTC"
+record: 5

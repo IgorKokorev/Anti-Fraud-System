@@ -52,7 +52,6 @@ public class WebSecurityConfigurerImpl extends WebSecurityConfigurerAdapter {
                 .antMatchers("/api/antifraud/stolencard/**").hasRole("SUPPORT")
                 .antMatchers(HttpMethod.PUT, "/api/auth/access/**").hasRole("ADMINISTRATOR")
                 .antMatchers(HttpMethod.PUT, "/api/auth/role/**").hasRole("ADMINISTRATOR")
-//                .antMatchers("/api/auth/user/**").authenticated()
                 .antMatchers("/actuator/shutdown").permitAll() // needs to run test
                 .and()
                 .sessionManagement()
