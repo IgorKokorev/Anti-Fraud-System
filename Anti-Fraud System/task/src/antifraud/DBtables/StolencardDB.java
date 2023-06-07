@@ -15,7 +15,7 @@ public class StolencardDB {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
     private Long id;
-    @Column(name = "number")
-    @NotNull
+
+    @Column(name = "number", unique = true, nullable = false)
     private String number;
 }

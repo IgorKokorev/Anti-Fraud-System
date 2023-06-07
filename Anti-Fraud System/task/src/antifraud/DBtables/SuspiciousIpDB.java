@@ -15,7 +15,7 @@ public class SuspiciousIpDB {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
     private Long id;
-    @Column(name = "ip")
-    @NotNull
+
+    @Column(name = "ip", unique = true, nullable = false)
     private String ip;
 }

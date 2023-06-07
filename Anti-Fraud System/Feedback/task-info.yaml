@@ -1994,6 +1994,1319 @@ files:
         };
     }
   learner_created: false
+- name: src/antifraud/DTORequests/UsernameRole.java
+  visible: true
+  text: |
+    package antifraud.DTORequests;
+
+    import lombok.AllArgsConstructor;
+    import lombok.Data;
+    import lombok.NoArgsConstructor;
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public class UsernameRole {
+        private String username;
+        private String role;
+    }
+  learner_created: true
+- name: src/antifraud/DBtables/StolencardDB.java
+  visible: true
+  text: |
+    package antifraud.DBtables;
+
+    import lombok.Data;
+    import lombok.NoArgsConstructor;
+
+    import javax.persistence.*;
+    import javax.validation.constraints.NotNull;
+
+    @Entity
+    @Data
+    @NoArgsConstructor
+    @Table(name = "stolencards")
+    public class StolencardDB {
+        @Id
+        @GeneratedValue(strategy = GenerationType.IDENTITY)
+        @Column(name = "id")
+        private Long id;
+
+        @Column(name = "number", unique = true, nullable = false)
+        private String number;
+    }
+  learner_created: true
+- name: src/antifraud/DTORequests/UsernameStatus.java
+  visible: true
+  text: |
+    package antifraud.DTORequests;
+
+    import lombok.AllArgsConstructor;
+    import lombok.Data;
+    import lombok.NoArgsConstructor;
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public class UsernameStatus {
+        private String username;
+        private String status;
+    }
+  learner_created: true
+- name: src/antifraud/controllers/RegistrationController.java
+  visible: true
+  text: |-
+    package antifraud.controllers;
+
+    import antifraud.DTORequests.UserToAdd;
+    import antifraud.DTOResponses.UserToReturn;
+    import antifraud.DBtables.UserDB;
+    import antifraud.repository.UserRepository;
+    import io.micrometer.core.instrument.util.StringUtils;
+    import org.springframework.beans.factory.annotation.Autowired;
+    import org.springframework.http.HttpStatus;
+    import org.springframework.http.ResponseEntity;
+    import org.springframework.security.crypto.password.PasswordEncoder;
+    import org.springframework.web.bind.annotation.PostMapping;
+    import org.springframework.web.bind.annotation.RequestBody;
+    import org.springframework.web.bind.annotation.RestController;
+    import org.springframework.web.server.ResponseStatusException;
+
+    @RestController
+    public class RegistrationController {
+        @Autowired
+        UserRepository userRepo;
+        @Autowired
+        PasswordEncoder encoder;
+
+        @PostMapping("/api/auth/user")
+        public ResponseEntity<UserToReturn> register(@RequestBody UserToAdd user) {
+
+            // Checking data correctness
+            if (user == null) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Empty user data");
+            if (StringUtils.isBlank(user.getName())) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Empty user name");
+            if (StringUtils.isBlank(user.getUsername())) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Empty user username");
+            if (StringUtils.isBlank(user.getPassword())) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Empty user password");
+
+            // Checking if the username is occupied
+            if (userRepo.findByUsernameIgnoreCase(user.getUsername()).size() > 0)
+                throw new ResponseStatusException(HttpStatus.CONFLICT, "The username already exists");
+
+            // hashing password
+            user.setPassword(encoder.encode(user.getPassword()));
+
+            // Saving user to DB
+            boolean isNonLocked = userRepo.count() == 0; // First user is ADMINISTRATOR and unlocked
+            String role = isNonLocked ? "ADMINISTRATOR" : "MERCHANT"; // All the others are MERCHANT and locked
+            UserDB userDB = new UserDB(user.getName().trim(), user.getUsername().trim(), user.getPassword(), isNonLocked, role);
+    //        userDB.getRolesOfUser().add(new RolesDB(role));
+            userDB = userRepo.save(userDB);
+
+            // returning user data
+            UserToReturn userToReturn = new UserToReturn(userDB);
+            return ResponseEntity.status(HttpStatus.CREATED).body(userToReturn);
+        }
+    }
+  learner_created: true
+- name: src/antifraud/DTORequests/UserToAdd.java
+  visible: true
+  text: |-
+    package antifraud.DTORequests;
+
+    import lombok.AllArgsConstructor;
+    import lombok.Data;
+    import lombok.NoArgsConstructor;
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public class UserToAdd {
+        private String name;
+        private String username;
+        private String password;
+    }
+  learner_created: true
+- name: src/antifraud/DBtables/UserDB.java
+  visible: true
+  text: |
+    package antifraud.DBtables;
+
+    import lombok.Data;
+    import lombok.NoArgsConstructor;
+
+    import javax.persistence.*;
+    import javax.validation.constraints.NotNull;
+    import java.util.LinkedHashSet;
+    import java.util.Set;
+
+    @Entity
+    @Data
+    @NoArgsConstructor
+    @Table(name = "users")
+    public class UserDB {
+        @Id
+        @GeneratedValue(strategy = GenerationType.IDENTITY)
+        @Column(name = "id")
+        private Long id;
+
+        @Column(name = "name", nullable = false)
+        private String name;
+
+        @Column(name = "username", nullable = false)
+        private String username;
+
+        @Column(name = "password", nullable = false)
+        private String password;
+
+        @Column(name = "isNonLocked", nullable = false)
+        private boolean isAccountNonLocked;
+
+        @Column(name = "role", nullable = false)
+        private String role;
+
+        public UserDB(String name, String username, String password, boolean isAccountNonLocked, String role) {
+            this.name = name;
+            this.username = username;
+            this.password = password;
+            this.isAccountNonLocked = isAccountNonLocked;
+            this.role = role;
+        }
+    }
+  learner_created: true
+- name: src/antifraud/repository/SuspiciousIpDBRepository.java
+  visible: true
+  text: |
+    package antifraud.repository;
+
+    import antifraud.DBtables.SuspiciousIpDB;
+    import org.springframework.data.repository.CrudRepository;
+    import org.springframework.stereotype.Component;
+    import org.springframework.stereotype.Repository;
+
+    import java.util.List;
+
+    @Component
+    @Repository
+    public interface SuspiciousIpDBRepository extends CrudRepository<SuspiciousIpDB, Long> {
+        List<SuspiciousIpDB> findByIp(String ip);
+        List<SuspiciousIpDB> findAllByOrderById();
+        boolean existsByIp(String ip);
+    }
+  learner_created: true
+- name: src/antifraud/controllers/IPController.java
+  visible: true
+  text: |
+    package antifraud.controllers;
+
+    import antifraud.DBtables.SuspiciousIpDB;
+    import antifraud.DTORequests.SuspiciousIpToAdd;
+    import antifraud.DTOResponses.Status;
+    import antifraud.repository.SuspiciousIpDBRepository;
+    import antifraud.config.CheckData;
+    import org.springframework.beans.factory.annotation.Autowired;
+    import org.springframework.http.HttpStatus;
+    import org.springframework.web.bind.annotation.*;
+    import org.springframework.web.server.ResponseStatusException;
+
+    import java.util.List;
+
+    @RestController
+    public class IPController {
+        @Autowired
+        SuspiciousIpDBRepository ipRepository;
+
+        // Add new suspicious IP
+        @PostMapping(value = "/api/antifraud/suspicious-ip")
+        public SuspiciousIpDB newSuspiciousIP(@RequestBody SuspiciousIpToAdd iPreceived) {
+
+            if (!CheckData.isIPcorrect(iPreceived.getIp())) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                        "Incorrect IP format");
+            }
+
+            List<SuspiciousIpDB> suspiciousIps = ipRepository.findByIp(iPreceived.getIp());
+
+            if (suspiciousIps.size() > 0)
+                throw new ResponseStatusException(HttpStatus.CONFLICT,
+                        "The IP was already registered");
+
+            SuspiciousIpDB suspiciousIpDB = new SuspiciousIpDB();
+            suspiciousIpDB.setIp(iPreceived.getIp());
+
+            suspiciousIpDB = ipRepository.save(suspiciousIpDB);
+
+            return suspiciousIpDB;
+        }
+
+        // Delete suspicious IP from DB
+        @DeleteMapping(value = "/api/antifraud/suspicious-ip/{ip}")
+        public Status deleteIP(@PathVariable String ip) {
+            if (!CheckData.isIPcorrect(ip)) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                        "Incorrect IP format");
+            }
+
+            List<SuspiciousIpDB> suspiciousIps = ipRepository.findByIp(ip);
+
+            if (suspiciousIps.size() == 0)
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND,
+                        "The IP was not found in DB");
+
+            suspiciousIps.forEach(suspiciousIp -> ipRepository.deleteById(suspiciousIp.getId()));
+            return new Status("IP " + ip + " successfully removed!");
+        }
+
+        // Get list of suspicious IP address sorted by ID in ascending order
+        @GetMapping(value = "/api/antifraud/suspicious-ip")
+        public List<SuspiciousIpDB> getListOfSuspiciousIps() {
+            return ipRepository.findAllByOrderById();
+        }
+
+
+
+    }
+  learner_created: true
+- name: src/antifraud/repository/UserRepository.java
+  visible: true
+  text: |
+    package antifraud.repository;
+
+    import antifraud.DBtables.UserDB;
+    import org.springframework.data.repository.CrudRepository;
+    import org.springframework.stereotype.Component;
+    import org.springframework.stereotype.Repository;
+
+    import java.util.List;
+    import java.util.Optional;
+
+    @Component
+    @Repository
+    public interface UserRepository extends CrudRepository<UserDB, Long> {
+        Optional<UserDB> findById(Long id);
+        List<UserDB> findByUsernameIgnoreCase(String username);
+        List<UserDB> findAllByOrderById();
+    //    List<UserDB> findAll();
+
+    }
+  learner_created: true
+- name: src/antifraud/authentication/RestAuthenticationEntryPoint.java
+  visible: true
+  text: |-
+    package antifraud.authentication;
+
+    import org.springframework.security.core.AuthenticationException;
+    import org.springframework.security.web.AuthenticationEntryPoint;
+    import org.springframework.stereotype.Component;
+
+    import javax.servlet.ServletException;
+    import javax.servlet.http.HttpServletRequest;
+    import javax.servlet.http.HttpServletResponse;
+    import java.io.IOException;
+    import java.security.Principal;
+    import java.util.Enumeration;
+
+    // Handles auth error
+    @Component
+    public class RestAuthenticationEntryPoint implements AuthenticationEntryPoint {
+
+        @Override
+        public void commence(HttpServletRequest request, HttpServletResponse response, AuthenticationException authException) throws IOException, ServletException, IOException {
+            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, authException.getMessage());
+        }
+    }
+  learner_created: true
+- name: src/antifraud/DBtables/SuspiciousIpDB.java
+  visible: true
+  text: |
+    package antifraud.DBtables;
+
+    import lombok.Data;
+    import lombok.NoArgsConstructor;
+
+    import javax.persistence.*;
+    import javax.validation.constraints.NotNull;
+
+    @Entity
+    @Data
+    @NoArgsConstructor
+    @Table(name = "suspiciousips")
+    public class SuspiciousIpDB {
+        @Id
+        @GeneratedValue(strategy = GenerationType.IDENTITY)
+        @Column(name = "id")
+        private Long id;
+
+        @Column(name = "ip", unique = true, nullable = false)
+        private String ip;
+    }
+  learner_created: true
+- name: src/antifraud/config/TransactionResult.java
+  visible: true
+  text: |
+    package antifraud.config;
+
+    public enum TransactionResult { ALLOWED, MANUAL_PROCESSING, PROHIBITED }
+  learner_created: true
+- name: src/antifraud/DTOResponses/Status.java
+  visible: true
+  text: |
+    package antifraud.DTOResponses;
+
+    import lombok.AllArgsConstructor;
+    import lombok.Data;
+    import lombok.NoArgsConstructor;
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public class Status {
+        private String status;
+    }
+  learner_created: true
+- name: src/antifraud/repository/TransactionDBRepository.java
+  visible: true
+  text: |
+    package antifraud.repository;
+
+    import antifraud.DBtables.TransactionDB;
+    import org.springframework.data.jpa.repository.Query;
+    import org.springframework.data.repository.CrudRepository;
+
+    import java.time.LocalDateTime;
+    import java.util.Optional;
+
+    public interface TransactionDBRepository extends CrudRepository<TransactionDB, Long> {
+        Optional<TransactionDB> findById(long id);
+        @Query(value = "SELECT COUNT (DISTINCT region) FROM transactions WHERE region != ?1 AND number = ?2 AND date > ?3 AND date < ?4", nativeQuery = true)
+        int countRegionsByTime(String region, String number, LocalDateTime from, LocalDateTime to);
+
+        @Query(value = "SELECT COUNT (DISTINCT ip) FROM transactions WHERE ip != ?1 AND number = ?2 AND date > ?3 AND date < ?4", nativeQuery = true)
+        int countIpsByTime(String ip, String number, LocalDateTime from, LocalDateTime to);
+    }
+  learner_created: true
+- name: src/antifraud/config/CheckData.java
+  visible: true
+  text: |
+    package antifraud.config;
+
+    import java.util.ArrayList;
+    import java.util.Arrays;
+    import java.util.List;
+
+    public class CheckData {
+        // Check IP correctness
+        public static boolean isIPcorrect(String ip) {
+            if (ip == null) return false;
+
+            String regexp = "\\d+(\\.\\d+){3}";
+            if (!ip.matches(regexp)) return false;
+
+            String[] split = ip.split("\\.");
+            boolean isCorrect = true;
+            for (String part : split) {
+                if (Integer.parseInt(part) >= 256) {
+                    isCorrect = false;
+                    break;
+                }
+            }
+
+            return isCorrect;
+        }
+
+        public static boolean isCardNumberCorrect(String card) {
+            if (card == null) return false;
+
+            String visaRegex = "4\\d{15}";
+            String masterCardRegex = "((5[1-5]\\d{2})|((222[1-9])|(22[3-9]\\d)|(2[3-6]\\d{2})|(27[01]\\d)|(2720)))\\d{12}";
+            String americanExpressRegex = "(34|37)\\d{13}";
+
+            String cardType;
+            if (card.matches(visaRegex)) {
+                cardType = "Visa";
+            } else if (card.matches(masterCardRegex)) {
+                cardType = "MasterCard";
+            } else if (card.matches(americanExpressRegex)) {
+                cardType = "AmericanExpress";
+            } else {
+                return false;
+            }
+
+            return isValidLuhn(card);
+        }
+
+        private static boolean isValidLuhn(String value) {
+            int sum = Character.getNumericValue(value.charAt(value.length() - 1));
+            int parity = value.length() % 2;
+            for (int i = value.length() - 2; i >= 0; i--) {
+                int summand = Character.getNumericValue(value.charAt(i));
+                if (i % 2 == parity) {
+                    int product = summand * 2;
+                    summand = (product > 9) ? (product - 9) : product;
+                }
+                sum += summand;
+            }
+            return (sum % 10) == 0;
+        }
+
+        public static boolean isRegionCorrect(String region) {
+            if (region == null) return false;
+
+            final List<String> regions = new ArrayList<>(Arrays.asList("EAP", "ECA", "HIC", "LAC", "MENA", "SA", "SSA"));
+            return regions.contains(region);
+        }
+    }
+  learner_created: true
+- name: src/antifraud/authentication/UserDetailsServiceImpl.java
+  visible: true
+  text: |-
+    package antifraud.authentication;
+
+    import antifraud.DBtables.UserDB;
+    import antifraud.repository.UserRepository;
+    import org.springframework.beans.factory.annotation.Autowired;
+    import org.springframework.security.core.userdetails.UserDetails;
+    import org.springframework.security.core.userdetails.UserDetailsService;
+    import org.springframework.security.core.userdetails.UsernameNotFoundException;
+    import org.springframework.stereotype.Service;
+
+    import java.util.List;
+
+    @Service
+    public class UserDetailsServiceImpl implements UserDetailsService {
+        @Autowired
+        UserRepository userRepo;
+
+        @Override
+        public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+            String cutTheCrap = username.trim();
+            List<UserDB> userDBList = userRepo.findByUsernameIgnoreCase(cutTheCrap);
+
+            if (userDBList.size() != 1) {
+                throw new UsernameNotFoundException("Not found: " + cutTheCrap);
+            }
+
+            return new UserDetailsImpl(userDBList.get(0));
+        }
+    }
+  learner_created: true
+- name: src/antifraud/controllers/TransactionController.java
+  visible: true
+  text: |
+    package antifraud.controllers;
+
+    import antifraud.DBtables.CardLimitsDB;
+    import antifraud.DBtables.TransactionDB;
+    import antifraud.DTORequests.FeedbackRequest;
+    import antifraud.DTORequests.TransactionToAdd;
+    import antifraud.DTOResponses.TransactionResultResponse;
+    import antifraud.config.CheckData;
+    import antifraud.config.TransactionResult;
+    import antifraud.repository.CardLimitsDBRepository;
+    import antifraud.repository.StolencardDBRepository;
+    import antifraud.repository.SuspiciousIpDBRepository;
+    import antifraud.repository.TransactionDBRepository;
+    import org.springframework.beans.factory.annotation.Autowired;
+    import org.springframework.http.HttpStatus;
+    import org.springframework.web.bind.annotation.PostMapping;
+    import org.springframework.web.bind.annotation.PutMapping;
+    import org.springframework.web.bind.annotation.RequestBody;
+    import org.springframework.web.bind.annotation.RestController;
+    import org.springframework.web.server.ResponseStatusException;
+
+    import java.time.temporal.ChronoUnit;
+    import java.util.Arrays;
+    import java.util.Optional;
+
+    @RestController
+    public class TransactionController {
+        @Autowired
+        SuspiciousIpDBRepository ipRepository;
+        @Autowired
+        StolencardDBRepository cardRepo;
+        @Autowired
+        TransactionDBRepository transactionRepo;
+        @Autowired
+        CardLimitsDBRepository cardLimitRepo;
+
+        // Creating transaction result and info
+        TransactionResult result;
+        StringBuilder infoBuilder;
+
+        @PutMapping(value = "/api/antifraud/transaction")
+        public TransactionDB transactionFeedback(@RequestBody FeedbackRequest feedbackRequest) {
+
+            if (!Arrays.stream(TransactionResult.values()).toList().contains(feedbackRequest.getFeedback())) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                        "Incorrect feedback");
+            }
+
+            Optional<TransactionDB> optionalTr = transactionRepo.findById(feedbackRequest.getTransactionId());
+
+            if (optionalTr.isEmpty()) {
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND,
+                        "Transaction not found");
+            }
+
+            TransactionDB tr = optionalTr.get();
+
+            if (tr.getFeedback() != null) {
+                throw new ResponseStatusException(HttpStatus.CONFLICT,
+                        "Transaction already has feedback");
+            }
+
+            if (feedbackRequest.getFeedback().equals(tr.getResult())) {
+                throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY,
+                        "Feedback equals to result of operation");
+            }
+
+            Optional<CardLimitsDB> optionalCardLimits = cardLimitRepo.findByNumber(tr.getNumber());
+            CardLimitsDB cardLimits;
+            if (optionalCardLimits.isEmpty()) {
+                cardLimits = new CardLimitsDB(tr.getNumber());
+            } else {
+                cardLimits = optionalCardLimits.get();
+            }
+
+
+
+            tr.setFeedback(feedbackRequest.getFeedback());
+            tr = transactionRepo.save(tr);
+            return tr;
+        }
+
+        @PostMapping(value = "/api/antifraud/transaction")
+        public TransactionResultResponse makeTransaction(@RequestBody TransactionToAdd transaction) {
+            // Checking data correctness
+            checkTransactionParameters(transaction);
+
+            // By amount
+            checkTransactionByAmount(transaction);
+
+            // By card number
+            checkTransactionByCardNumber(transaction);
+
+            // By ip
+            checkTransactionByIp(transaction);
+
+            // By ip correlation
+            checkTransactionByIpCorrelation(transaction);
+
+            // By region correlation
+            checkTransactionByRegionCorrelation(transaction);
+
+            String info = infoBuilder.toString();
+
+            //saving to DB
+            TransactionDB transactionDB = new TransactionDB(transaction, result);
+            transactionDB = transactionRepo.save(transactionDB);
+
+            return new TransactionResultResponse(result, info);
+        }
+
+        private static void checkTransactionParameters(TransactionToAdd transaction) {
+            /*        LocalDateTime dateTime;
+            try {
+                dateTime = LocalDateTime.parse(transaction.getDate());
+            } catch (DateTimeParseException e) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                        "Incorrect date format");
+            }*/
+
+            if (!CheckData.isIPcorrect(transaction.getIp())) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                        "Incorrect IP");
+            }
+
+            if (!CheckData.isCardNumberCorrect(transaction.getNumber())) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                        "Incorrect card number");
+            }
+
+            if (transaction.getAmount() <= 0) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                        "Amount should be a positive long number");
+            }
+
+            if (!CheckData.isRegionCorrect(transaction.getRegion())) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                        "Incorrect region code");
+            }
+        }
+
+        private void checkTransactionByAmount(TransactionToAdd transaction) {
+
+            Optional<CardLimitsDB> optionalCardLimits = cardLimitRepo.findByNumber(transaction.getNumber());
+            CardLimitsDB cardLimits;
+            if (optionalCardLimits.isEmpty()) {
+                cardLimits = new CardLimitsDB(transaction.getNumber());
+            } else {
+                cardLimits = optionalCardLimits.get();
+            }
+
+            if (transaction.getAmount() > cardLimits.getMaxManual()) {
+                result = TransactionResult.PROHIBITED;
+                infoBuilder = new StringBuilder("amount");
+            } else if (transaction.getAmount() > cardLimits.getMaxAllowed()) {
+                result = TransactionResult.MANUAL_PROCESSING;
+                infoBuilder = new StringBuilder("amount");
+            } else {
+                result = TransactionResult.ALLOWED;
+                infoBuilder = new StringBuilder("none");
+            }
+        }
+
+        private void checkTransactionByCardNumber(TransactionToAdd transaction) {
+            if (cardRepo.existsByNumber(transaction.getNumber())) {
+                if (result.equals(TransactionResult.PROHIBITED)) {
+                    infoBuilder.append(", card-number");
+                } else {
+                    infoBuilder = new StringBuilder("card-number");
+                    result = TransactionResult.PROHIBITED;
+                }
+            }
+        }
+
+        private void checkTransactionByIp(TransactionToAdd transaction) {
+            if (ipRepository.existsByIp(transaction.getIp())) {
+                if (result.equals(TransactionResult.PROHIBITED)) {
+                    infoBuilder.append(", ip");
+                } else {
+                    infoBuilder = new StringBuilder("ip");
+                    result = TransactionResult.PROHIBITED;
+                }
+            }
+        }
+
+        private void checkTransactionByIpCorrelation(TransactionToAdd transaction) {
+            int ipCount = transactionRepo.countIpsByTime(
+                    transaction.getIp(),
+                    transaction.getNumber(),
+                    transaction.getDate().minus(1, ChronoUnit.HOURS),
+                    transaction.getDate()
+            );
+            if (ipCount > 2) {
+                if (result.equals(TransactionResult.PROHIBITED)) {
+                    infoBuilder.append(", ip-correlation");
+                } else {
+                    infoBuilder = new StringBuilder("ip-correlation");
+                    result = TransactionResult.PROHIBITED;
+                }
+            } else if (ipCount == 2) {
+                if (result.equals(TransactionResult.MANUAL_PROCESSING)) {
+                    infoBuilder.append(", ip-correlation");
+                } else if (result.equals(TransactionResult.ALLOWED)) {
+                    infoBuilder = new StringBuilder("ip-correlation");
+                    result = TransactionResult.MANUAL_PROCESSING;
+                }
+            }
+        }
+
+        private void checkTransactionByRegionCorrelation(TransactionToAdd transaction) {
+            int regionCount = transactionRepo.countRegionsByTime(
+                    transaction.getRegion(),
+                    transaction.getNumber(),
+                    transaction.getDate().minus(1, ChronoUnit.HOURS),
+                    transaction.getDate()
+            );
+            if (regionCount > 2) {
+                if (result.equals(TransactionResult.PROHIBITED)) {
+                    infoBuilder.append(", region-correlation");
+                } else {
+                    infoBuilder = new StringBuilder("region-correlation");
+                    result = TransactionResult.PROHIBITED;
+                }
+            } else if (regionCount == 2) {
+                if (result.equals(TransactionResult.MANUAL_PROCESSING)) {
+                    infoBuilder.append(", region-correlation");
+                } else if (result.equals(TransactionResult.ALLOWED)) {
+                    infoBuilder = new StringBuilder("region-correlation");
+                    result = TransactionResult.MANUAL_PROCESSING;
+                }
+            }
+        }
+    }
+  learner_created: true
+- name: src/antifraud/controllers/UserController.java
+  visible: true
+  text: |
+    package antifraud.controllers;
+
+    import antifraud.DBtables.UserDB;
+    import antifraud.DTORequests.*;
+    import antifraud.DTOResponses.Status;
+    import antifraud.DTOResponses.UserToReturn;
+    import antifraud.repository.UserRepository;
+    import org.springframework.beans.factory.annotation.Autowired;
+    import org.springframework.http.HttpStatus;
+    import org.springframework.http.ResponseEntity;
+    import org.springframework.web.bind.annotation.*;
+    import org.springframework.web.server.ResponseStatusException;
+
+    import java.util.ArrayList;
+    import java.util.List;
+
+    @RestController
+    public class UserController {
+        @Autowired
+        UserRepository userRepo;
+
+        @DeleteMapping("/api/auth/user/{username}")
+        public UsernameStatus deleteUser(@PathVariable String username) {
+            List<UserDB> usersDB = userRepo.findByUsernameIgnoreCase(username);
+            if (usersDB.size() == 0) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found");
+
+            userRepo.deleteById(usersDB.get(0).getId());
+            return new UsernameStatus(username, "Deleted successfully!");
+        }
+
+        @GetMapping("/api/auth/list")
+        public ResponseEntity<List<UserToReturn>> returnUsersList() {
+            List<UserDB> usersDB = userRepo.findAllByOrderById();
+            List<UserToReturn> usersToReturn = new ArrayList<>();
+
+            for (UserDB user: usersDB) {
+                usersToReturn.add(new UserToReturn(user));
+            }
+
+            return ResponseEntity.status(HttpStatus.OK).body(usersToReturn);
+        }
+
+        @PutMapping("/api/auth/role")
+        public ResponseEntity<UserToReturn> changeRole(@RequestBody UsernameRole usernameRole) {
+            if (usernameRole == null || usernameRole.getUsername() == null || usernameRole.getRole() == null)
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Incomplete data");
+
+            List<UserDB> usersDB = userRepo.findByUsernameIgnoreCase(usernameRole.getUsername());
+            if (usersDB.size() == 0) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found");
+
+            if (!usernameRole.getRole().equals("SUPPORT") && !usernameRole.getRole().equals("MERCHANT"))
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Incorrect role");
+
+            UserDB userDB = usersDB.get(0);
+            if (userDB.getRole().equals(usernameRole.getRole()))
+                throw new ResponseStatusException(HttpStatus.CONFLICT, "Role already assigned");
+
+            userDB.setRole(usernameRole.getRole());
+            userDB = userRepo.save(userDB);
+
+            // returning user data
+            UserToReturn userToReturn = new UserToReturn(userDB);
+            return ResponseEntity.status(HttpStatus.OK).body(userToReturn);
+        }
+
+        @PutMapping("/api/auth/access")
+        public ResponseEntity<Status> changeRole(@RequestBody UsernameOperation usernameOperation) {
+            if (usernameOperation == null || usernameOperation.getUsername() == null || usernameOperation.getOperation() == null)
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Incomplete data");
+
+            List<UserDB> usersDB = userRepo.findByUsernameIgnoreCase(usernameOperation.getUsername());
+            if (usersDB.size() == 0) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found");
+
+            if (!usernameOperation.getOperation().equals("LOCK") && !usernameOperation.getOperation().equals("UNLOCK"))
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Incorrect operation");
+
+            UserDB userDB = usersDB.get(0);
+            boolean toUnlock = usernameOperation.getOperation().equals("UNLOCK");
+
+            if (userDB.getRole().equals("ADMINISTRATOR") && !toUnlock)
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Administrator can't be locked");
+
+            userDB.setAccountNonLocked(toUnlock);
+            userRepo.save(userDB);
+
+            // saving user data
+            UserToReturn userToReturn = new UserToReturn(userDB);
+
+            String status = "User " + userDB.getUsername() + " " + (toUnlock ? "un" : "") + "locked!";
+            return ResponseEntity.status(HttpStatus.OK).body(new Status(status));
+        }
+    }
+  learner_created: true
+- name: src/antifraud/DTORequests/StolencardToAdd.java
+  visible: true
+  text: |
+    package antifraud.DTORequests;
+
+    import lombok.AllArgsConstructor;
+    import lombok.Data;
+    import lombok.NoArgsConstructor;
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public class StolencardToAdd {
+        private String number;
+    }
+  learner_created: true
+- name: src/antifraud/DTOResponses/IPresponse.java
+  visible: true
+  text: |
+    package antifraud.DTOResponses;
+
+    import lombok.AllArgsConstructor;
+    import lombok.Data;
+    import lombok.NoArgsConstructor;
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public class IPresponse {
+        private long id;
+        private String ip;
+    }
+  learner_created: true
+- name: src/antifraud/authentication/UserDetailsImpl.java
+  visible: true
+  text: |-
+    package antifraud.authentication;
+
+    import antifraud.DBtables.UserDB;
+    import org.springframework.security.core.GrantedAuthority;
+    import org.springframework.security.core.authority.SimpleGrantedAuthority;
+    import org.springframework.security.core.userdetails.UserDetails;
+
+    import java.util.Collection;
+    import java.util.List;
+
+    public class UserDetailsImpl implements UserDetails {
+        private final String username;
+        private final String password;
+        private boolean isAccountNonLocked;
+        private final List<GrantedAuthority> rolesAndAuthorities;
+
+        public UserDetailsImpl(UserDB user) {
+            username = user.getUsername();
+            password = user.getPassword();
+            isAccountNonLocked = user.isAccountNonLocked();
+            rolesAndAuthorities = List.of(new SimpleGrantedAuthority("ROLE_" + user.getRole()));
+        }
+
+        @Override
+        public Collection<? extends GrantedAuthority> getAuthorities() {
+            return rolesAndAuthorities;
+        }
+
+        @Override
+        public String getPassword() {
+            return password;
+        }
+
+        @Override
+        public String getUsername() {
+            return username;
+        }
+
+        // 4 remaining methods that just return true
+        @Override
+        public boolean isAccountNonExpired() {
+            return true;
+        }
+
+        @Override
+        public boolean isAccountNonLocked() {
+            return isAccountNonLocked;
+        }
+
+        @Override
+        public boolean isCredentialsNonExpired() {
+            return true;
+        }
+
+        @Override
+        public boolean isEnabled() {
+            return true;
+        }
+    }
+  learner_created: true
+- name: src/antifraud/DTORequests/UsernameOperation.java
+  visible: true
+  text: |
+    package antifraud.DTORequests;
+
+    import lombok.AllArgsConstructor;
+    import lombok.Data;
+    import lombok.NoArgsConstructor;
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public class UsernameOperation {
+        private String username;
+        private String operation;
+    }
+  learner_created: true
+- name: src/antifraud/DTORequests/TransactionToAdd.java
+  visible: true
+  text: |
+    package antifraud.DTORequests;
+
+    import lombok.AllArgsConstructor;
+    import lombok.Data;
+    import lombok.NoArgsConstructor;
+
+    import java.time.LocalDateTime;
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public class TransactionToAdd {
+        private long amount;
+        private String ip;
+        private String number;
+        private String region;
+        private LocalDateTime date;
+    }
+  learner_created: true
+- name: src/antifraud/controllers/StolenCardsController.java
+  visible: true
+  text: |
+    package antifraud.controllers;
+
+    import antifraud.DBtables.StolencardDB;
+    import antifraud.DTORequests.StolencardToAdd;
+    import antifraud.DTOResponses.Status;
+    import antifraud.config.CheckData;
+    import antifraud.repository.StolencardDBRepository;
+    import org.springframework.beans.factory.annotation.Autowired;
+    import org.springframework.http.HttpStatus;
+    import org.springframework.web.bind.annotation.*;
+    import org.springframework.web.server.ResponseStatusException;
+
+    import java.util.List;
+
+    @RestController
+    public class StolenCardsController {
+        @Autowired
+        StolencardDBRepository cardRepo;
+
+        @PostMapping(value = "/api/antifraud/stolencard")
+        public StolencardDB addStolenCardNumber(@RequestBody StolencardToAdd number) {
+            String card = number.getNumber().replaceAll("\\s", "");
+
+            if (!CheckData.isCardNumberCorrect(card))
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                        "Incorrect card number");
+
+            List<StolencardDB> cardsInDB = cardRepo.findByNumber(card);
+
+            if (cardsInDB.size() > 0)
+                throw new ResponseStatusException(HttpStatus.CONFLICT,
+                        "Card number is already in DB");
+
+            StolencardDB stolencardDB = new StolencardDB();
+            stolencardDB.setNumber(card);
+
+            stolencardDB = cardRepo.save(stolencardDB);
+
+            return stolencardDB;
+        }
+
+        @DeleteMapping(value = "/api/antifraud/stolencard/{number}")
+        public Status deleteStolenCard(@PathVariable String number) {
+            number = number.replaceAll("\\s", "");
+
+            if (!CheckData.isCardNumberCorrect(number)) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                        "Incorrect card number");
+            }
+
+            List<StolencardDB> stolencardDBS = cardRepo.findByNumber(number);
+
+            if (stolencardDBS.size() == 0)
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND,
+                        "The card number was not found in DB");
+
+            stolencardDBS.forEach(suspiciousIp -> cardRepo.deleteById(suspiciousIp.getId()));
+            return new Status("Card " + number + " successfully removed!");
+        }
+
+        @GetMapping(value = "/api/antifraud/stolencard")
+        public List<StolencardDB> getListOfStolenCards() {
+            return cardRepo.findAllByOrderById();
+        }
+    }
+  learner_created: true
+- name: src/antifraud/authentication/WebSecurityConfigurerImpl.java
+  visible: true
+  text: |-
+    package antifraud.authentication;
+
+    import org.springframework.beans.factory.annotation.Autowired;
+    import org.springframework.context.annotation.Bean;
+    import org.springframework.http.HttpMethod;
+    import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+    import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
+    import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+    import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+    import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+    import org.springframework.security.config.http.SessionCreationPolicy;
+    import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+    import org.springframework.security.crypto.password.NoOpPasswordEncoder;
+    import org.springframework.security.crypto.password.PasswordEncoder;
+    import org.springframework.security.core.userdetails.UserDetailsService;
+    import org.springframework.security.provisioning.InMemoryUserDetailsManager;
+
+    @EnableWebSecurity
+    public class WebSecurityConfigurerImpl extends WebSecurityConfigurerAdapter {
+        @Autowired
+        RestAuthenticationEntryPoint restAuthenticationEntryPoint;
+        @Autowired
+        UserDetailsService userDetailsService;
+
+        @Override
+        protected void configure(AuthenticationManagerBuilder auth) throws Exception {
+            auth
+                    .userDetailsService(userDetailsService) // user store 1
+                    .passwordEncoder(getEncoder());
+
+            /*DaoAuthenticationProvider daoAuthenticationProvider = new DaoAuthenticationProvider();
+            daoAuthenticationProvider.setHideUserNotFoundExceptions(false);
+            daoAuthenticationProvider.setUserDetailsService(userDetailsService);
+            daoAuthenticationProvider.setPasswordEncoder(getEncoder());
+            auth.authenticationProvider(daoAuthenticationProvider);
+    */
+        }
+
+        @Override
+        public void configure(HttpSecurity http) throws Exception {
+            http.httpBasic()
+                    .authenticationEntryPoint(restAuthenticationEntryPoint) // Handles auth error
+                    .and()
+                    .csrf().disable().headers().frameOptions().disable() // for Postman, the H2 console
+                    .and()
+                    .authorizeRequests() // manage access
+                    .antMatchers(HttpMethod.POST, "/api/auth/user").permitAll()
+                    .antMatchers(HttpMethod.DELETE, "/api/auth/user/**").hasRole("ADMINISTRATOR")
+                    .antMatchers(HttpMethod.GET, "/api/auth/list/**").hasAnyRole("ADMINISTRATOR", "SUPPORT")
+                    .antMatchers(HttpMethod.POST, "/api/antifraud/transaction/**").hasRole("MERCHANT")
+                    .antMatchers("/api/antifraud/suspicious-ip/**").hasRole("SUPPORT")
+                    .antMatchers("/api/antifraud/stolencard/**").hasRole("SUPPORT")
+                    .antMatchers(HttpMethod.GET, "/api/antifraud/history/**").hasRole("SUPPORT")
+                    .antMatchers(HttpMethod.PUT, "/api/antifraud/transaction/**").hasRole("SUPPORT")
+                    .antMatchers(HttpMethod.PUT, "/api/auth/access/**").hasRole("ADMINISTRATOR")
+                    .antMatchers(HttpMethod.PUT, "/api/auth/role/**").hasRole("ADMINISTRATOR")
+                    .antMatchers("/actuator/shutdown").permitAll() // needs to run test
+                    .and()
+                    .sessionManagement()
+                    .sessionCreationPolicy(SessionCreationPolicy.STATELESS); // no session
+        }
+
+        @Bean
+        public PasswordEncoder getEncoder() {
+            return new BCryptPasswordEncoder();
+        }
+    }
+  learner_created: true
+- name: src/antifraud/DTORequests/SuspiciousIpToAdd.java
+  visible: true
+  text: |
+    package antifraud.DTORequests;
+
+    import lombok.AllArgsConstructor;
+    import lombok.Data;
+    import lombok.NoArgsConstructor;
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public class SuspiciousIpToAdd {
+        private String ip;
+    }
+  learner_created: true
+- name: src/antifraud/repository/StolencardDBRepository.java
+  visible: true
+  text: |
+    package antifraud.repository;
+
+    import antifraud.DBtables.StolencardDB;
+    import org.springframework.data.repository.CrudRepository;
+
+    import java.util.List;
+
+    public interface StolencardDBRepository extends CrudRepository<StolencardDB, Long> {
+        List<StolencardDB> findByNumber(String number);
+        List<StolencardDB> findAllByOrderById();
+        boolean existsByNumber(String number);
+    }
+  learner_created: true
+- name: src/antifraud/DTOResponses/TransactionResultResponse.java
+  visible: true
+  text: |
+    package antifraud.DTOResponses;
+
+    import antifraud.config.TransactionResult;
+    import lombok.AllArgsConstructor;
+    import lombok.Data;
+    import lombok.NoArgsConstructor;
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public class TransactionResultResponse {
+
+        private TransactionResult result;
+        private String info;
+    }
+  learner_created: true
+- name: src/antifraud/DTOResponses/UserToReturn.java
+  visible: true
+  text: |
+    package antifraud.DTOResponses;
+
+    import antifraud.DBtables.UserDB;
+    import lombok.AllArgsConstructor;
+    import lombok.Data;
+    import lombok.NoArgsConstructor;
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public class UserToReturn {
+        private Long id;
+        private String name;
+        private String username;
+        private String role;
+
+        public UserToReturn(UserDB userDB) {
+            this.id = userDB.getId();
+            this.name = userDB.getName();
+            this.username = userDB.getUsername();
+            this.role = userDB.getRole();
+        }
+    }
+  learner_created: true
+- name: src/antifraud/DTORequests/FeedbackRequest.java
+  visible: true
+  text: |
+    package antifraud.DTORequests;
+
+    import antifraud.config.TransactionResult;
+    import lombok.AllArgsConstructor;
+    import lombok.Data;
+    import lombok.NoArgsConstructor;
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public class FeedbackRequest {
+        private long transactionId;
+        private TransactionResult feedback;
+    }
+  learner_created: true
+- name: src/antifraud/repository/CardLimitsDBRepository.java
+  visible: true
+  text: |
+    package antifraud.repository;
+
+    import antifraud.DBtables.CardLimitsDB;
+    import org.springframework.data.repository.CrudRepository;
+
+    import java.util.Optional;
+
+    public interface CardLimitsDBRepository extends CrudRepository<CardLimitsDBRepository, Long> {
+        Optional<CardLimitsDB> findByNumber(String number);
+    }
+  learner_created: true
+- name: src/antifraud/DBtables/TransactionDB.java
+  visible: true
+  text: |
+    package antifraud.DBtables;
+
+    import antifraud.DTORequests.TransactionToAdd;
+    import antifraud.config.TransactionResult;
+    import lombok.Data;
+    import lombok.NoArgsConstructor;
+
+    import javax.persistence.*;
+    import javax.validation.constraints.NotNull;
+    import java.time.LocalDateTime;
+
+    @Entity
+    @Data
+    @NoArgsConstructor
+    @Table(name = "transactions")
+    public class TransactionDB {
+
+        @Id
+        @GeneratedValue(strategy = GenerationType.IDENTITY)
+        @Column(name = "id")
+        private Long id;
+
+        @Column(name = "amount", nullable = false)
+        private long amount;
+
+        @Column(name = "ip", nullable = false)
+        private String ip;
+
+        @Column(name = "number", nullable = false)
+        private String number;
+
+        @Column(name = "region", nullable = false)
+        private String region;
+
+        @Column(name = "date", nullable = false)
+        private LocalDateTime date;
+
+        @Column(name = "result", nullable = false)
+        private TransactionResult result;
+
+        @Column(name = "feedback")
+        private TransactionResult feedback;
+
+        public TransactionDB(TransactionToAdd tr, TransactionResult result) {
+            this.amount = tr.getAmount();
+            this.ip = tr.getIp();
+            this.number = tr.getNumber();
+            this.region = tr.getRegion();
+            this.date = tr.getDate();
+            this.result = result;
+        }
+    }
+  learner_created: true
+- name: src/antifraud/DBtables/CardLimitsDB.java
+  visible: true
+  text: |
+    package antifraud.DBtables;
+
+    import lombok.Data;
+    import lombok.NoArgsConstructor;
+
+    import javax.persistence.*;
+
+    @Entity
+    @Data
+    @NoArgsConstructor
+    @Table(name = "card_limits")
+    public class CardLimitsDB {
+        @Id
+        @GeneratedValue(strategy = GenerationType.IDENTITY)
+        @Column(name = "id")
+        private Long id;
+
+        @Column(name = "number", unique = true, nullable = false)
+        private String number;
+
+        @Column(name = "max_allowed", nullable = false)
+        private long maxAllowed = 200L;
+
+        @Column(name = "max_manual", nullable = false)
+        private long maxManual = 1500L;
+
+        public CardLimitsDB(String number) {
+            this.number = number;
+        }
+    }
+  learner_created: true
+- name: src/antifraud/controllers/TransactionFeedbackController.java
+  visible: true
+  learner_created: true
+- name: src/antifraud/controllers/HistoryController.java
+  visible: true
+  learner_created: true
 feedback_link: https://hyperskill.org/learn/step/18072#comment
-status: Unchecked
+status: Solved
+feedback:
+  message: Well done! You've finished the project. Select a new project on <a href="https://hyperskill.org/projects">Hyperskill</a>
+    to continue learning.
+  time: "Wed, 07 Jun 2023 14:04:29 UTC"
 record: -1

@@ -17,29 +17,21 @@ public class UserDB {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
     private Long id;
-    @Column(name = "name")
-    @NotNull
+
+    @Column(name = "name", nullable = false)
     private String name;
-    @Column(name = "username")
-    @NotNull
+
+    @Column(name = "username", nullable = false)
     private String username;
-    @Column(name = "password")
-    @NotNull
+
+    @Column(name = "password", nullable = false)
     private String password;
-    @Column(name = "isNonLocked")
-    @NotNull
+
+    @Column(name = "isNonLocked", nullable = false)
     private boolean isAccountNonLocked;
-    @Column(name = "role")
-    @NotNull
+
+    @Column(name = "role", nullable = false)
     private String role;
-
-
-/*    @ManyToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
-    @JoinTable(
-            name = "user_role",
-            joinColumns = @JoinColumn(name = "user_id"),
-            inverseJoinColumns = @JoinColumn(name = "role_id"))
-    private Set<RolesDB> rolesOfUser = new LinkedHashSet<>();*/
 
     public UserDB(String name, String username, String password, boolean isAccountNonLocked, String role) {
         this.name = name;

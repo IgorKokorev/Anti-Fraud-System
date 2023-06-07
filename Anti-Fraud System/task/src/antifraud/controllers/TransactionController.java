@@ -1,10 +1,12 @@
 package antifraud.controllers;
 
+import antifraud.DBtables.CardLimitsDB;
 import antifraud.DBtables.TransactionDB;
 import antifraud.DTORequests.TransactionToAdd;
 import antifraud.DTOResponses.TransactionResultResponse;
 import antifraud.config.CheckData;
 import antifraud.config.TransactionResult;
+import antifraud.repository.CardLimitsDBRepository;
 import antifraud.repository.StolencardDBRepository;
 import antifraud.repository.SuspiciousIpDBRepository;
 import antifraud.repository.TransactionDBRepository;
@@ -16,6 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.temporal.ChronoUnit;
+import java.util.Optional;
 
 @RestController
 public class TransactionController {
@@ -25,6 +28,8 @@ public class TransactionController {
     StolencardDBRepository cardRepo;
     @Autowired
     TransactionDBRepository transactionRepo;
+    @Autowired
+    CardLimitsDBRepository cardLimitRepo;
 
     // Creating transaction result and info
     TransactionResult result;
@@ -53,7 +58,7 @@ public class TransactionController {
         String info = infoBuilder.toString();
 
         //saving to DB
-        TransactionDB transactionDB = new TransactionDB(transaction, result, info);
+        TransactionDB transactionDB = new TransactionDB(transaction, result);
         transactionDB = transactionRepo.save(transactionDB);
 
         return new TransactionResultResponse(result, info);
@@ -90,10 +95,19 @@ public class TransactionController {
     }
 
     private void checkTransactionByAmount(TransactionToAdd transaction) {
-        if (transaction.getAmount() > 1500) {
+
+        Optional<CardLimitsDB> optionalCardLimits = cardLimitRepo.findByNumber(transaction.getNumber());
+        CardLimitsDB cardLimits;
+        if (optionalCardLimits.isEmpty()) {
+            cardLimits = new CardLimitsDB(transaction.getNumber());
+        } else {
+            cardLimits = optionalCardLimits.get();
+        }
+
+        if (transaction.getAmount() > cardLimits.getMaxManual()) {
             result = TransactionResult.PROHIBITED;
             infoBuilder = new StringBuilder("amount");
-        } else if (transaction.getAmount() > 200) {
+        } else if (transaction.getAmount() > cardLimits.getMaxAllowed()) {
             result = TransactionResult.MANUAL_PROCESSING;
             infoBuilder = new StringBuilder("amount");
         } else {

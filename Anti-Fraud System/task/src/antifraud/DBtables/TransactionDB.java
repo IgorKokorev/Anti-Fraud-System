@@ -18,43 +18,36 @@ public class TransactionDB {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
-    private Long id;
+    private Long transactionId;
 
-    @Column(name = "amount")
-    @NotNull
+    @Column(name = "amount", nullable = false)
     private long amount;
 
-    @Column(name = "ip")
-    @NotNull
+    @Column(name = "ip", nullable = false)
     private String ip;
 
-    @Column(name = "number")
-    @NotNull
+    @Column(name = "number", nullable = false)
     private String number;
 
-    @Column(name = "region")
-    @NotNull
+    @Column(name = "region", nullable = false)
     private String region;
 
-    @Column(name = "date")
-    @NotNull
+    @Column(name = "date", nullable = false)
     private LocalDateTime date;
 
-    @Column(name = "result")
-    @NotNull
+    @Column(name = "result", nullable = false)
     private TransactionResult result;
 
-    @Column(name = "info")
-    @NotNull
-    private String info;
+    @Column(name = "feedback")
+    private String feedback;
 
-    public TransactionDB(TransactionToAdd tr, TransactionResult result, String info) {
+    public TransactionDB(TransactionToAdd tr, TransactionResult result) {
         this.amount = tr.getAmount();
         this.ip = tr.getIp();
         this.number = tr.getNumber();
         this.region = tr.getRegion();
         this.date = tr.getDate();
         this.result = result;
-        this.info = info;
+        this.feedback = "";
     }
 }
